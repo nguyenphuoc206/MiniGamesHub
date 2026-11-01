@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Number - Chuỗi số</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #f5f0e6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+      color: #3d3d3d;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .header h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: #2c2c2c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .header h1 .icon {
+      font-size: 2.2rem;
+    }
+
+    .header p {
+      margin-top: 6px;
+      font-size: 0.95rem;
+      color: #7a7a7a;
+      max-width: 440px;
+      line-height: 1.4;
+    }
+
+    .top-bar {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      min-width: 95px;
+      text-align: center;
+    }
+
+    .card .label {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 2px;
+    }
+
+    .card .value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #2c2c2c;
+    }
+
+    .card .sub {
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-top: 2px;
+    }
+
+    .lives-hearts {
+      color: #e53935;
+      font-size: 1.15rem;
+      letter-spacing: 1px;
+    }
+
+    #start-btn {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 14px 28px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
+      transition: all 0.2s;
+    }
+
+    #start-btn:hover:not(:disabled) {
+      background: #1b5e20;
+      transform: translateY(-2px);
+    }
+
+    #start-btn:disabled {
+      background: #9e9e9e;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Game area */
+    #game-area {
+      width: 380px;
+      max-width: 95vw;
+      background: #faf6f0;
+      border: 4px solid #5d4037;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Status text */
+    #status {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #5d4037;
+      min-height: 28px;
+      text-align: center;
+    }
+
+    /* Number pad 3x3 */
+    #number-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+    }
+
+    .num-btn {
+      aspect-ratio: 1;
+      background: #fff;
+      border: 3px solid #e0d8cc;
+      border-radius: 18px;
+      font-size: 1.9rem;
+      font-weight: 800;
+      font-family: 'Nunito', sans-serif;
+      color: #3d3d3d;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .num-btn:hover:not(:disabled) {
+      background: #f5f0e6;
+      transform: translateY(-2px);
+    }
+
+    .num-btn:active:not(:disabled),
+    .num-btn.active {
+      background: #2e7d32;
+      color: white;
+      border-color: #1b5e20;
+      transform: scale(0.94);
+      box-shadow: 0 2px 6px rgba(46, 125, 50, 0.4);
+    }
+
+    .num-btn.wrong {
+      background: #e53935 !important;
+      color: white !important;
+      border-color: #b71c1c !important;
+    }
+
+    .num-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    /* Overlay */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(40, 30, 20, 0.82);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.6rem;
+      font-weight: 800;
+      z-index: 20;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #overlay span {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-top: 8px;
+      opacity: 0.9;
+    }
+
+    #confetti-canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 25;
+      border-radius: 20px;
+    }
+
+    .hint {
+      margin-top: 18px;
+      font-size: 0.85rem;
+      color: #888;
+      text-align: center;
+      max-width: 420px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1><span class="icon">🔢</span> Memory Number</h1>
+    <p>Xem chuỗi số sáng lên, sau đó nhấn lại đúng thứ tự. Mỗi level chuỗi dài thêm 1 số!</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="card">
+      <div class="label">Điểm</div>
+      <div class="value" id="score">0</div>
+      <div class="sub">Kỷ lục <span id="highscore">0</span></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Level</div>
+      <div class="value" id="level">1</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Mạng</div>
+      <div class="value lives-hearts" id="lives">❤️❤️❤️</div>
+    </div>
+
+    <button id="start-btn">Bắt đầu</button>
+  </div>
+
+  <div id="game-area">
+    <canvas id="confetti-canvas"></canvas>
+
+    <div id="status">Nhấn Bắt đầu để chơi</div>
+
+    <div id="number-pad">
+      <!-- 1-9 buttons will be created by JS -->
+    </div>
+
+    <div id="overlay">
+      Nhấn Bắt đầu
+      <span>Nhớ chuỗi số và nhấn lại đúng thứ tự</span>
+    </div>
+  </div>
+
+  <p class="hint">
+    Quan sát kỹ chuỗi sáng lên → chờ đến lượt bạn → nhấn các số đúng thứ tự.
+  </p>
+
+  <script>
+    const pad = document.getElementById('number-pad');
+    const statusEl = document.getElementById('status');
+    const scoreEl = document.getElementById('score');
+    const highscoreEl = document.getElementById('highscore');
+    const levelEl = document.getElementById('level');
+    const livesEl = document.getElementById('lives');
+    const startBtn = document.getElementById('start-btn');
+    const overlay = document.getElementById('overlay');
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    const gameArea = document.getElementById('game-area');
+
+    // State
+    let sequence = [];
+    let playerIndex = 0;
+    let level = 1;
+    let score = 0;
+    let lives = 3;
+    let highscore = 0;
+    let isPlaying = false;
+    let isShowing = false;
+    let confetti = [];
+    let buttons = {};
+
+    // Safe storage
+    function safeGetHigh() {
+      try { return parseInt(localStorage.getItem('memorySeqHigh') || '0', 10); }
+      catch { return 0; }
+    }
+    function safeSetHigh(v) {
+      try { localStorage.setItem('memorySeqHigh', v); } catch {}
+    }
+
+    highscore = safeGetHigh();
+    highscoreEl.textContent = highscore;
+
+    // Create 1-9 buttons
+    function createPad() {
+      pad.innerHTML = '';
+      for (let i = 1; i <= 9; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'num-btn';
+        btn.textContent = i;
+        btn.dataset.num = i;
+        btn.disabled = true;
+        btn.addEventListener('click', () => onNumberClick(i));
+        pad.appendChild(btn);
+        buttons[i] = btn;
+      }
+    }
+
+    function resizeCanvas() {
+      canvas.width = gameArea.offsetWidth;
+      canvas.height = gameArea.offsetHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // Confetti
+    function spawnConfetti() {
+      const colors = ['#e53935', '#43a047', '#fb8c00', '#1e88e5', '#8e24aa', '#fdd835'];
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      for (let i = 0; i < 55; i++) {
+        confetti.push({
+          x: cx, y: cy,
+          vx: (Math.random() - 0.5) * 13,
+          vy: (Math.random() - 0.9) * 11,
+          size: Math.random() * 7 + 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1,
+          decay: 0.011 + Math.random() * 0.01,
+          rot: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 14
+        });
+      }
+    }
+
+    function drawConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = confetti.length - 1; i >= 0; i--) {
+        const p = confetti[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.24;
+        p.vx *= 0.98;
+        p.life -= p.decay;
+        p.rot += p.rotSpeed;
+        if (p.life <= 0) { confetti.splice(i, 1); continue; }
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * Math.PI / 180);
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.55);
+        ctx.restore();
+      }
+      if (confetti.length) requestAnimationFrame(drawConfetti);
+    }
+
+    function updateUI() {
+      scoreEl.textContent = score;
+      levelEl.textContent = level;
+      livesEl.textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+
+      if (score > highscore) {
+        highscore = score;
+        highscoreEl.textContent = highscore;
+        safeSetHigh(highscore);
+      }
+    }
+
+    function setButtonsEnabled(enabled) {
+      Object.values(buttons).forEach(btn => {
+        btn.disabled = !enabled;
+      });
+    }
+
+    function highlight(num, duration = 450) {
+      return new Promise(resolve => {
+        const btn = buttons[num];
+        btn.classList.add('active');
+        setTimeout(() => {
+          btn.classList.remove('active');
+          setTimeout(resolve, 120);
+        }, duration);
+      });
+    }
+
+    async function showSequence() {
+      isShowing = true;
+      setButtonsEnabled(false);
+      statusEl.textContent = 'Quan sát chuỗi số...';
+
+      await new Promise(r => setTimeout(r, 500));
+
+      for (const num of sequence) {
+        await highlight(num, 420);
+      }
+
+      isShowing = false;
+      playerIndex = 0;
+      statusEl.textContent = 'Đến lượt bạn!';
+      setButtonsEnabled(true);
+    }
+
+    function addToSequence() {
+      const next = Math.floor(Math.random() * 9) + 1;
+      sequence.push(next);
+    }
+
+    async function nextLevel() {
+      level++;
+      score += level * 10;
+      updateUI();
+      statusEl.textContent = `Level ${level}!`;
+      await new Promise(r => setTimeout(r, 700));
+      addToSequence();
+      showSequence();
+    }
+
+    function onNumberClick(num) {
+      if (!isPlaying || isShowing) return;
+
+      const expected = sequence[playerIndex];
+
+      if (num === expected) {
+        // Đúng
+        highlight(num, 280);
+        playerIndex++;
+
+        if (playerIndex >= sequence.length) {
+          // Hoàn thành chuỗi
+          setButtonsEnabled(false);
+          statusEl.textContent = 'Chính xác! 🎉';
+          setTimeout(() => nextLevel(), 600);
+        }
+      } else {
+        // Sai
+        const btn = buttons[num];
+        btn.classList.add('wrong');
+        setTimeout(() => btn.classList.remove('wrong'), 400);
+
+        lives--;
+        updateUI();
+        setButtonsEnabled(false);
+
+        if (lives <= 0) {
+          endGame();
+        } else {
+          statusEl.textContent = `Sai rồi! Còn ${lives} mạng`;
+          setTimeout(() => {
+            playerIndex = 0;
+            showSequence(); // cho xem lại chuỗi
+          }, 900);
+        }
+      }
+    }
+
+    function startGame() {
+      sequence = [];
+      playerIndex = 0;
+      level = 1;
+      score = 0;
+      lives = 3;
+      isPlaying = true;
+      confetti = [];
+
+      updateUI();
+      overlay.style.display = 'none';
+      startBtn.disabled = true;
+      startBtn.textContent = 'Đang chơi...';
+
+      addToSequence();
+      showSequence();
+    }
+
+    function endGame() {
+      isPlaying = false;
+      setButtonsEnabled(false);
+      startBtn.disabled = false;
+      startBtn.textContent = 'Chơi lại';
+
+      statusEl.textContent = `Game Over · Level ${level}`;
+      overlay.innerHTML = `
+        GAME OVER
+        <span>Level đạt được: ${level} · Điểm: ${score}</span>
+      `;
+      overlay.style.display = 'flex';
+
+      if (score > 0) {
+        spawnConfetti();
+        drawConfetti();
+      }
+    }
+
+    // Init
+    createPad();
+    resizeCanvas();
+    updateUI();
+
+    startBtn.addEventListener('click', startGame);
+  </script>
+</body>
+</html>

@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hứng Táo</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #f5f0e6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+      color: #3d3d3d;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .header h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: #2c2c2c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .header h1 .apple-icon {
+      font-size: 2.4rem;
+    }
+
+    .header p {
+      margin-top: 6px;
+      font-size: 0.95rem;
+      color: #7a7a7a;
+      max-width: 420px;
+      line-height: 1.4;
+    }
+
+    /* Score + Lives + Start */
+    .top-bar {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      min-width: 110px;
+      text-align: center;
+    }
+
+    .card .label {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 2px;
+    }
+
+    .card .value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #2c2c2c;
+    }
+
+    .card .sub {
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-top: 2px;
+    }
+
+    .lives-hearts {
+      color: #e53935;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+    }
+
+    #start-btn {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 14px 28px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
+      transition: all 0.2s;
+    }
+
+    #start-btn:hover:not(:disabled) {
+      background: #1b5e20;
+      transform: translateY(-2px);
+    }
+
+    #start-btn:disabled {
+      background: #9e9e9e;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Game container */
+    #game-container {
+      width: 500px;
+      max-width: 95vw;
+      height: 380px;
+      background: #faf6f0;
+      border: 4px solid #5d4037;
+      border-radius: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+
+    /* Background elements */
+    .sky {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, #faf6f0 0%, #f5f0e6 100%);
+    }
+
+    .sun {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      width: 36px;
+      height: 36px;
+      background: #f8c8a0;
+      border-radius: 50%;
+      opacity: 0.7;
+    }
+
+    .hill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 70px;
+      background: #c8d9b8;
+      border-radius: 50% 50% 0 0 / 40px 40px 0 0;
+    }
+
+    .tree {
+      position: absolute;
+      bottom: 55px;
+      width: 50px;
+      height: 70px;
+    }
+
+    .tree.left { left: 40px; }
+    .tree.right { right: 40px; }
+
+    .tree-trunk {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 28px;
+      background: #8d6e63;
+      border-radius: 3px;
+    }
+
+    .tree-leaves {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 48px;
+      background: #2e7d32;
+      border-radius: 50%;
+    }
+
+    .tree-leaves::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: 8px;
+      width: 32px;
+      height: 32px;
+      background: #388e3c;
+      border-radius: 50%;
+    }
+
+    /* Basket */
+    #basket {
+      position: absolute;
+      bottom: 28px;
+      left: 200px;
+      width: 90px;
+      height: 36px;
+      z-index: 10;
+      cursor: grab;
+    }
+
+    #basket .basket-body {
+      width: 100%;
+      height: 28px;
+      background: #8d6e63;
+      border-radius: 6px 6px 10px 10px;
+      position: relative;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+
+    #basket .basket-body::before {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      right: 8px;
+      height: 3px;
+      background: #6d4c41;
+      border-radius: 2px;
+    }
+
+    #basket .basket-body::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 8px;
+      right: 8px;
+      height: 3px;
+      background: #6d4c41;
+      border-radius: 2px;
+    }
+
+    #basket .basket-rim {
+      position: absolute;
+      top: -6px;
+      left: -4px;
+      width: calc(100% + 8px);
+      height: 12px;
+      background: #6d4c41;
+      border-radius: 8px 8px 4px 4px;
+    }
+
+    /* Apple */
+    #apple {
+      position: absolute;
+      top: 80px;
+      left: 234px;
+      width: 34px;
+      height: 34px;
+      z-index: 8;
+    }
+
+    #apple .apple-body {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 30% 25%, #ff7043, #e53935 70%);
+      border-radius: 50%;
+      position: relative;
+      box-shadow: inset -4px -4px 6px rgba(0,0,0,0.15);
+    }
+
+    #apple .stem {
+      position: absolute;
+      top: -8px;
+      left: 14px;
+      width: 5px;
+      height: 10px;
+      background: #5d4037;
+      border-radius: 2px;
+    }
+
+    #apple .leaf {
+      position: absolute;
+      top: -6px;
+      left: 18px;
+      width: 12px;
+      height: 7px;
+      background: #43a047;
+      border-radius: 50% 0;
+      transform: rotate(30deg);
+    }
+
+    /* Overlay "Nhấn Bắt đầu" */
+    #start-overlay {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2c2c2c;
+      color: white;
+      padding: 6px 18px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    /* Game Over */
+    #game-over {
+      position: absolute;
+      inset: 0;
+      background: rgba(40, 30, 20, 0.85);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2.4rem;
+      font-weight: 800;
+      z-index: 30;
+      text-align: center;
+    }
+
+    #game-over span {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-top: 8px;
+      opacity: 0.9;
+    }
+
+    /* Confetti canvas */
+    #confetti-canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 25;
+    }
+
+    /* Control buttons */
+    .controls {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .ctrl-btn {
+      background: #fff;
+      border: 2px solid #e0d8cc;
+      border-radius: 50px;
+      padding: 12px 32px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      color: #3d3d3d;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .ctrl-btn:active,
+    .ctrl-btn.active {
+      background: #f0ebe3;
+      transform: scale(0.96);
+    }
+
+    .hint {
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: #888;
+      text-align: center;
+      max-width: 460px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1><span class="apple-icon">🍎</span> Hứng Táo</h1>
+    <p>Táo rơi từ trên xuống. Đưa giỏ sang trái hoặc phải để hứng — chạm giỏ được điểm, chạm đáy mất một mạng.</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="card">
+      <div class="label">Điểm số</div>
+      <div class="value" id="score">0</div>
+      <div class="sub">Kỷ lục <span id="highscore">0</span></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Mạng sống</div>
+      <div class="value lives-hearts" id="lives">❤️❤️❤️</div>
+    </div>
+
+    <button id="start-btn">Bắt đầu</button>
+  </div>
+
+  <div id="game-container">
+    <div class="sky"></div>
+    <div class="sun"></div>
+
+    <div class="tree left">
+      <div class="tree-leaves"></div>
+      <div class="tree-trunk"></div>
+    </div>
+    <div class="tree right">
+      <div class="tree-leaves"></div>
+      <div class="tree-trunk"></div>
+    </div>
+
+    <div class="hill"></div>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div id="apple">
+      <div class="stem"></div>
+      <div class="leaf"></div>
+      <div class="apple-body"></div>
+    </div>
+
+    <div id="basket">
+      <div class="basket-rim"></div>
+      <div class="basket-body"></div>
+    </div>
+
+    <div id="start-overlay">Nhấn Bắt đầu</div>
+
+    <div id="game-over">
+      GAME OVER
+      <span>Nhấn "Bắt đầu" để chơi lại</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="ctrl-btn" id="btn-left">◀ Trái</button>
+    <button class="ctrl-btn" id="btn-right">Phải ▶</button>
+  </div>
+
+  <p class="hint">
+    Phím ← →, nút bên dưới, hoặc kéo trong khung. Mỗi lần hứng trúng, táo rơi nhanh hơn.
+  </p>
+
+  <script>
+    // ====================== BIẾN ======================
+    const container = document.getElementById('game-container');
+    const basket = document.getElementById('basket');
+    const apple = document.getElementById('apple');
+    const scoreEl = document.getElementById('score');
+    const highscoreEl = document.getElementById('highscore');
+    const livesEl = document.getElementById('lives');
+    const startBtn = document.getElementById('start-btn');
+    const startOverlay = document.getElementById('start-overlay');
+    const gameOverEl = document.getElementById('game-over');
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    const btnLeft = document.getElementById('btn-left');
+    const btnRight = document.getElementById('btn-right');
+
+    const W = 500;
+    const H = 380;
+    const BASKET_W = 90;
+    const APPLE_SIZE = 34;
+
+    let score = 0;
+    let highscore = 0;
+    let lives = 3;
+    let appleX = 233;
+    let appleY = 80;
+    let basketX = 205;
+    let fallSpeed = 2.2;
+    let gameRunning = false;
+    let animId = null;
+    let confetti = [];
+
+    // ====================== SAFE STORAGE ======================
+    function safeGetHighscore() {
+      try {
+        return parseInt(localStorage.getItem('hungTaoHigh') || '0', 10);
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    function safeSetHighscore(value) {
+      try {
+        localStorage.setItem('hungTaoHigh', value);
+      } catch (e) {
+        // bỏ qua nếu không ghi được
+      }
+    }
+
+    highscore = safeGetHighscore();
+    highscoreEl.textContent = highscore;
+
+    // ====================== CANVAS ======================
+    function resizeCanvas() {
+      canvas.width = W;
+      canvas.height = H;
+    }
+    resizeCanvas();
+
+    // ====================== CONFETTI ======================
+    function spawnConfetti(x, y) {
+      const colors = ['#e53935', '#43a047', '#fb8c00', '#1e88e5', '#8e24aa', '#fdd835'];
+      for (let i = 0; i < 40; i++) {
+        confetti.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 11,
+          vy: (Math.random() - 0.9) * 9,
+          size: Math.random() * 6 + 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1,
+          decay: 0.012 + Math.random() * 0.01,
+          rot: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 12
+        });
+      }
+    }
+
+    function drawConfetti() {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = confetti.length - 1; i >= 0; i--) {
+        const p = confetti[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.22;
+        p.vx *= 0.98;
+        p.life -= p.decay;
+        p.rot += p.rotSpeed;
+
+        if (p.life <= 0) {
+          confetti.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * Math.PI / 180);
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.55);
+        ctx.restore();
+      }
+    }
+
+    // ====================== HELPERS ======================
+    function randomX() {
+      return Math.floor(Math.random() * (W - APPLE_SIZE - 20)) + 10;
+    }
+
+    function resetApple() {
+      appleX = randomX();
+      appleY = -10;
+      apple.style.left = appleX + 'px';
+      apple.style.top = appleY + 'px';
+    }
+
+    function updateLivesDisplay() {
+      const hearts = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+      livesEl.textContent = hearts || '💀';
+    }
+
+    function updateUI() {
+      scoreEl.textContent = score;
+      updateLivesDisplay();
+      if (score > highscore) {
+        highscore = score;
+        highscoreEl.textContent = highscore;
+        safeSetHighscore(highscore);
+      }
+    }
+
+    // ====================== CONTROLS ======================
+    const keys = { ArrowLeft: false, ArrowRight: false };
+    let leftPressed = false;
+    let rightPressed = false;
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        keys[e.key] = true;
+      }
+    });
+    document.addEventListener('keyup', e => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        keys[e.key] = false;
+      }
+    });
+
+    function setLeft(v) { leftPressed = v; btnLeft.classList.toggle('active', v); }
+    function setRight(v) { rightPressed = v; btnRight.classList.toggle('active', v); }
+
+    btnLeft.addEventListener('mousedown', () => setLeft(true));
+    btnLeft.addEventListener('mouseup', () => setLeft(false));
+    btnLeft.addEventListener('mouseleave', () => setLeft(false));
+    btnLeft.addEventListener('touchstart', e => { e.preventDefault(); setLeft(true); });
+    btnLeft.addEventListener('touchend', () => setLeft(false));
+
+    btnRight.addEventListener('mousedown', () => setRight(true));
+    btnRight.addEventListener('mouseup', () => setRight(false));
+    btnRight.addEventListener('mouseleave', () => setRight(false));
+    btnRight.addEventListener('touchstart', e => { e.preventDefault(); setRight(true); });
+    btnRight.addEventListener('touchend', () => setRight(false));
+
+    // Drag basket
+    let dragging = false;
+    basket.addEventListener('mousedown', () => dragging = true);
+    window.addEventListener('mouseup', () => dragging = false);
+    container.addEventListener('mousemove', e => {
+      if (!dragging || !gameRunning) return;
+      const rect = container.getBoundingClientRect();
+      let x = e.clientX - rect.left - BASKET_W / 2;
+      basketX = Math.max(0, Math.min(W - BASKET_W, x));
+      basket.style.left = basketX + 'px';
+    });
+
+    basket.addEventListener('touchstart', e => { e.preventDefault(); dragging = true; });
+    window.addEventListener('touchend', () => dragging = false);
+    container.addEventListener('touchmove', e => {
+      if (!dragging || !gameRunning) return;
+      const touch = e.touches[0];
+      const rect = container.getBoundingClientRect();
+      let x = touch.clientX - rect.left - BASKET_W / 2;
+      basketX = Math.max(0, Math.min(W - BASKET_W, x));
+      basket.style.left = basketX + 'px';
+    });
+
+    function moveBasket() {
+      const speed = 7;
+      if (keys.ArrowLeft || leftPressed) basketX = Math.max(0, basketX - speed);
+      if (keys.ArrowRight || rightPressed) basketX = Math.min(W - BASKET_W, basketX + speed);
+      basket.style.left = basketX + 'px';
+    }
+
+    // ====================== COLLISION ======================
+    function checkCollision() {
+      const appleBottom = appleY + APPLE_SIZE;
+      const basketTop = H - 64;
+
+      if (appleBottom >= basketTop && appleY < basketTop + 30) {
+        if (appleX + APPLE_SIZE > basketX + 5 && appleX < basketX + BASKET_W - 5) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // ====================== GAME LOOP ======================
+    function gameLoop() {
+      if (!gameRunning) return;
+
+      moveBasket();
+      appleY += fallSpeed;
+      apple.style.top = appleY + 'px';
+      drawConfetti();
+
+      if (checkCollision()) {
+        score++;
+        fallSpeed += 0.25;
+        updateUI();
+        spawnConfetti(appleX + APPLE_SIZE / 2, appleY + APPLE_SIZE / 2);
+        resetApple();
+      } else if (appleY > H + 10) {
+        lives--;
+        updateUI();
+        if (lives <= 0) {
+          endGame();
+          return;
+        }
+        resetApple();
+      }
+
+      animId = requestAnimationFrame(gameLoop);
+    }
+
+    // ====================== START / END ======================
+    function startGame() {
+      score = 0;
+      lives = 3;
+      fallSpeed = 2.2;
+      basketX = 205;
+      basket.style.left = basketX + 'px';
+      confetti = [];
+      updateUI();
+      resetApple();
+
+      startOverlay.style.display = 'none';
+      gameOverEl.style.display = 'none';
+      startBtn.disabled = true;
+      startBtn.textContent = 'Đang chơi...';
+
+      gameRunning = true;
+      animId = requestAnimationFrame(gameLoop);
+    }
+
+    function endGame() {
+      gameRunning = false;
+      cancelAnimationFrame(animId);
+      gameOverEl.style.display = 'flex';
+      startBtn.disabled = false;
+      startBtn.textContent = 'Chơi lại';
+      startOverlay.style.display = 'block';
+      startOverlay.textContent = 'Game Over';
+    }
+
+    startBtn.addEventListener('click', startGame);
+
+    // Init
+    updateUI();
+    apple.style.left = appleX + 'px';
+    apple.style.top = appleY + 'px';
+    basket.style.left = basketX + 'px';
+  </script>
+</body>
+</html>

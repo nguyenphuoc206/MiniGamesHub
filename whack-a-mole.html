@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Whack-a-Mole - Đập Chuột</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #f5f0e6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+      color: #3d3d3d;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .header h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: #2c2c2c;
+    }
+
+    .header p {
+      margin-top: 4px;
+      font-size: 0.95rem;
+      color: #7a7a7a;
+    }
+
+    /* Score bar */
+    .top-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 10px 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      min-width: 90px;
+      text-align: center;
+    }
+
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: #888;
+    }
+
+    .stat-card .value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #2c2c2c;
+    }
+
+    #start-btn {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 28px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
+      transition: all 0.2s;
+    }
+
+    #start-btn:hover:not(:disabled) {
+      background: #1b5e20;
+      transform: translateY(-2px);
+    }
+
+    #start-btn:disabled {
+      background: #9e9e9e;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Game grid */
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 340px;
+      max-width: 92vw;
+      margin-bottom: 20px;
+    }
+
+    .hole {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      background: #d7ccc8;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: inset 0 8px 12px rgba(0,0,0,0.15);
+      cursor: pointer;
+    }
+
+    .mole {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70%;
+      height: 70%;
+      background: #8d6e63;
+      border-radius: 50% 50% 45% 45%;
+      transition: bottom 0.18s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .mole::before {
+      content: '';
+      position: absolute;
+      top: 18%;
+      left: 22%;
+      width: 12px;
+      height: 12px;
+      background: #3e2723;
+      border-radius: 50%;
+      box-shadow: 28px 0 0 #3e2723;
+    }
+
+    .mole.up {
+      bottom: 15%;
+    }
+
+    .mole.hit {
+      background: #e57373;
+      transform: translateX(-50%) scale(0.85);
+    }
+
+    /* Overlay */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(40, 30, 20, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .overlay-content {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px 40px;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+      max-width: 90%;
+    }
+
+    .overlay-content h2 {
+      font-size: 2rem;
+      color: #2e7d32;
+      margin-bottom: 8px;
+    }
+
+    .overlay-content p {
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    .overlay-content .final-score {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin: 16px 0 24px;
+      color: #2c2c2c;
+    }
+
+    #play-again-btn {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+    }
+
+    .hint {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: #888;
+      text-align: center;
+    }
+
+    @media (max-width: 400px) {
+      .game-grid {
+        gap: 12px;
+      }
+      .mole {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🐹 Whack-a-Mole</h1>
+    <p>Đập chuột càng nhiều càng điểm cao!</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="stat-card">
+      <div class="label">Điểm</div>
+      <div class="value" id="score">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Thời gian</div>
+      <div class="value" id="time">30</div>
+    </div>
+    <button id="start-btn">Bắt đầu</button>
+  </div>
+
+  <div class="game-grid" id="grid">
+    <!-- 9 holes will be generated by JS -->
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="overlay-content">
+      <h2>Hết giờ!</h2>
+      <p>Bạn đã đập được</p>
+      <div class="final-score">Điểm: <span id="final-score">0</span></div>
+      <button id="play-again-btn">Chơi lại</button>
+    </div>
+  </div>
+
+  <p class="hint">Nhấn vào chuột khi nó thò đầu lên. Càng nhanh càng tốt!</p>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const scoreEl = document.getElementById('score');
+    const timeEl = document.getElementById('time');
+    const startBtn = document.getElementById('start-btn');
+    const overlay = document.getElementById('overlay');
+    const finalScoreEl = document.getElementById('final-score');
+    const playAgainBtn = document.getElementById('play-again-btn');
+
+    const HOLES = 9;
+    const GAME_TIME = 30; // giây
+
+    let score = 0;
+    let timeLeft = GAME_TIME;
+    let gameActive = false;
+    let timerInterval = null;
+    let moleTimeout = null;
+    let currentMole = null;
+
+    // Tạo 9 lỗ
+    function createHoles() {
+      grid.innerHTML = '';
+      for (let i = 0; i < HOLES; i++) {
+        const hole = document.createElement('div');
+        hole.classList.add('hole');
+        hole.dataset.index = i;
+
+        const mole = document.createElement('div');
+        mole.classList.add('mole');
+        mole.textContent = '🐹';
+
+        hole.appendChild(mole);
+        hole.addEventListener('click', () => whack(i));
+        grid.appendChild(hole);
+      }
+    }
+
+    function randomHole() {
+      const index = Math.floor(Math.random() * HOLES);
+      // Tránh cùng lỗ liên tiếp
+      if (currentMole === index) return randomHole();
+      return index;
+    }
+
+    function showMole() {
+      if (!gameActive) return;
+
+      const index = randomHole();
+      currentMole = index;
+      const mole = grid.children[index].querySelector('.mole');
+      mole.classList.add('up');
+
+      // Thời gian chuột ở trên (càng về sau càng nhanh)
+      const upTime = Math.max(400, 1000 - score * 15);
+
+      moleTimeout = setTimeout(() => {
+        mole.classList.remove('up');
+        currentMole = null;
+        if (gameActive) showMole();
+      }, upTime);
+    }
+
+    function whack(index) {
+      if (!gameActive) return;
+      const mole = grid.children[index].querySelector('.mole');
+
+      if (mole.classList.contains('up') && !mole.classList.contains('hit')) {
+        mole.classList.add('hit');
+        score++;
+        scoreEl.textContent = score;
+
+        // Ẩn chuột ngay sau khi đập
+        setTimeout(() => {
+          mole.classList.remove('up', 'hit');
+        }, 200);
+
+        clearTimeout(moleTimeout);
+        currentMole = null;
+        setTimeout(showMole, 300);
+      }
+    }
+
+    function startGame() {
+      score = 0;
+      timeLeft = GAME_TIME;
+      gameActive = true;
+      currentMole = null;
+
+      scoreEl.textContent = '0';
+      timeEl.textContent = timeLeft;
+      startBtn.disabled = true;
+      startBtn.textContent = 'Đang chơi...';
+      overlay.classList.remove('show');
+
+      // Xóa mole đang hiện
+      document.querySelectorAll('.mole').forEach(m => {
+        m.classList.remove('up', 'hit');
+      });
+
+      clearInterval(timerInterval);
+      clearTimeout(moleTimeout);
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timeEl.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+
+      showMole();
+    }
+
+    function endGame() {
+      gameActive = false;
+      clearInterval(timerInterval);
+      clearTimeout(moleTimeout);
+
+      document.querySelectorAll('.mole').forEach(m => {
+        m.classList.remove('up', 'hit');
+      });
+
+      startBtn.disabled = false;
+      startBtn.textContent = 'Chơi lại';
+      finalScoreEl.textContent = score;
+      overlay.classList.add('show');
+    }
+
+    startBtn.addEventListener('click', startGame);
+    playAgainBtn.addEventListener('click', () => {
+      overlay.classList.remove('show');
+      startGame();
+    });
+
+    createHoles();
+  </script>
+</body>
+</html>

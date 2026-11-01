@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cờ Caro - Tic Tac Toe</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #f5f0e6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+      color: #3d3d3d;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #2c2c2c;
+    }
+
+    .header p {
+      margin-top: 6px;
+      font-size: 0.95rem;
+      color: #7a7a7a;
+    }
+
+    /* Score board */
+    .top-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .score-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .score-card .label {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .score-card .value {
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+
+    .score-card.x .value { color: #e53935; }
+    .score-card.o .value { color: #1e88e5; }
+    .score-card.draw .value { color: #757575; }
+
+    /* Status */
+    .status {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      height: 32px;
+      color: #2c2c2c;
+    }
+
+    /* Board */
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 320px;
+      max-width: 90vw;
+      margin-bottom: 24px;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      background: #fff;
+      border: 3px solid #e0d8cc;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.2rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      user-select: none;
+    }
+
+    .cell:hover:not(.filled) {
+      background: #f9f5ef;
+      border-color: #c8b8a8;
+      transform: scale(1.03);
+    }
+
+    .cell.x {
+      color: #e53935;
+    }
+
+    .cell.o {
+      color: #1e88e5;
+    }
+
+    .cell.filled {
+      cursor: default;
+    }
+
+    .cell.win {
+      background: #e8f5e9;
+      border-color: #43a047;
+      animation: pulse 0.5s ease;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    /* Buttons */
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 28px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #1b5e20;
+      transform: translateY(-2px);
+    }
+
+    button.secondary {
+      background: #fff;
+      color: #3d3d3d;
+      border: 2px solid #e0d8cc;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    button.secondary:hover {
+      background: #f5f0e6;
+      transform: translateY(-2px);
+    }
+
+    .hint {
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: #888;
+      text-align: center;
+    }
+
+    /* Mode selector */
+    .mode-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .mode-btn {
+      padding: 8px 18px;
+      border-radius: 30px;
+      border: 2px solid #e0d8cc;
+      background: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: #2e7d32;
+      color: white;
+      border-color: #2e7d32;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>⭕ Tic Tac Toe</h1>
+    <p>Cờ Caro 3×3 cổ điển</p>
+  </div>
+
+  <div class="mode-selector">
+    <button class="mode-btn active" id="mode-pvp">2 Người</button>
+    <button class="mode-btn" id="mode-ai">Vs Máy</button>
+  </div>
+
+  <div class="top-bar">
+    <div class="score-card x">
+      <div class="label">X thắng</div>
+      <div class="value" id="score-x">0</div>
+    </div>
+    <div class="score-card draw">
+      <div class="label">Hòa</div>
+      <div class="value" id="score-draw">0</div>
+    </div>
+    <div class="score-card o">
+      <div class="label">O thắng</div>
+      <div class="value" id="score-o">0</div>
+    </div>
+  </div>
+
+  <div class="status" id="status">Lượt của X</div>
+
+  <div class="board" id="board">
+    <div class="cell" data-index="0"></div>
+    <div class="cell" data-index="1"></div>
+    <div class="cell" data-index="2"></div>
+    <div class="cell" data-index="3"></div>
+    <div class="cell" data-index="4"></div>
+    <div class="cell" data-index="5"></div>
+    <div class="cell" data-index="6"></div>
+    <div class="cell" data-index="7"></div>
+    <div class="cell" data-index="8"></div>
+  </div>
+
+  <div class="controls">
+    <button id="restart-btn">Chơi lại</button>
+    <button class="secondary" id="reset-score-btn">Reset điểm</button>
+  </div>
+
+  <p class="hint">Chọn ô trống để đánh. Ai tạo được 3 quân liên tiếp sẽ thắng!</p>
+
+  <script>
+    const cells = document.querySelectorAll('.cell');
+    const statusEl = document.getElementById('status');
+    const scoreXEl = document.getElementById('score-x');
+    const scoreOEl = document.getElementById('score-o');
+    const scoreDrawEl = document.getElementById('score-draw');
+    const restartBtn = document.getElementById('restart-btn');
+    const resetScoreBtn = document.getElementById('reset-score-btn');
+    const modePvpBtn = document.getElementById('mode-pvp');
+    const modeAiBtn = document.getElementById('mode-ai');
+
+    let board = ['', '', '', '', '', '', '', '', ''];
+    let currentPlayer = 'X';
+    let gameActive = true;
+    let scores = { X: 0, O: 0, draw: 0 };
+    let vsAI = false;
+
+    const winPatterns = [
+      [0,1,2], [3,4,5], [6,7,8], // hàng
+      [0,3,6], [1,4,7], [2,5,8], // cột
+      [0,4,8], [2,4,6]           // chéo
+    ];
+
+    function updateStatus() {
+      if (!gameActive) return;
+      statusEl.textContent = vsAI && currentPlayer === 'O' 
+        ? 'Máy đang suy nghĩ...' 
+        : `Lượt của ${currentPlayer}`;
+    }
+
+    function handleClick(e) {
+      const index = e.target.dataset.index;
+      if (board[index] !== '' || !gameActive) return;
+      if (vsAI && currentPlayer === 'O') return;
+
+      makeMove(index);
+    }
+
+    function makeMove(index) {
+      board[index] = currentPlayer;
+      cells[index].textContent = currentPlayer;
+      cells[index].classList.add('filled', currentPlayer.toLowerCase());
+
+      if (checkWin()) {
+        endGame(false);
+        return;
+      }
+
+      if (board.every(cell => cell !== '')) {
+        endGame(true);
+        return;
+      }
+
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      updateStatus();
+
+      if (vsAI && currentPlayer === 'O' && gameActive) {
+        setTimeout(aiMove, 500);
+      }
+    }
+
+    function checkWin() {
+      for (let pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          // Highlight winning cells
+          pattern.forEach(i => cells[i].classList.add('win'));
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function endGame(isDraw) {
+      gameActive = false;
+      if (isDraw) {
+        statusEl.textContent = 'Hòa rồi!';
+        scores.draw++;
+        scoreDrawEl.textContent = scores.draw;
+      } else {
+        statusEl.textContent = `${currentPlayer} thắng! 🎉`;
+        scores[currentPlayer]++;
+        if (currentPlayer === 'X') scoreXEl.textContent = scores.X;
+        else scoreOEl.textContent = scores.O;
+      }
+    }
+
+    function aiMove() {
+      // Ưu tiên: thắng → chặn → giữa → ngẫu nhiên
+      let move = findBestMove('O') || findBestMove('X') || (board[4] === '' ? 4 : null);
+
+      if (move === null) {
+        const empty = board.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+        move = empty[Math.floor(Math.random() * empty.length)];
+      }
+
+      makeMove(move);
+    }
+
+    function findBestMove(player) {
+      for (let pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        const line = [board[a], board[b], board[c]];
+        const count = line.filter(v => v === player).length;
+        const empty = line.filter(v => v === '').length;
+
+        if (count === 2 && empty === 1) {
+          if (board[a] === '') return a;
+          if (board[b] === '') return b;
+          if (board[c] === '') return c;
+        }
+      }
+      return null;
+    }
+
+    function restart() {
+      board = ['', '', '', '', '', '', '', '', ''];
+      currentPlayer = 'X';
+      gameActive = true;
+
+      cells.forEach(cell => {
+        cell.textContent = '';
+        cell.className = 'cell';
+      });
+
+      updateStatus();
+    }
+
+    function resetScore() {
+      scores = { X: 0, O: 0, draw: 0 };
+      scoreXEl.textContent = '0';
+      scoreOEl.textContent = '0';
+      scoreDrawEl.textContent = '0';
+      restart();
+    }
+
+    // Events
+    cells.forEach(cell => cell.addEventListener('click', handleClick));
+    restartBtn.addEventListener('click', restart);
+    resetScoreBtn.addEventListener('click', resetScore);
+
+    modePvpBtn.addEventListener('click', () => {
+      vsAI = false;
+      modePvpBtn.classList.add('active');
+      modeAiBtn.classList.remove('active');
+      restart();
+    });
+
+    modeAiBtn.addEventListener('click', () => {
+      vsAI = true;
+      modeAiBtn.classList.add('active');
+      modePvpBtn.classList.remove('active');
+      restart();
+    });
+
+    updateStatus();
+  </script>
+</body>
+</html>

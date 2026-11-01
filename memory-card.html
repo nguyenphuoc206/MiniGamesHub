@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lật Thẻ - Memory Match</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #f5f0e6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+      color: #3d3d3d;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #2c2c2c;
+    }
+
+    .header p {
+      margin-top: 6px;
+      font-size: 0.95rem;
+      color: #7a7a7a;
+      max-width: 420px;
+      line-height: 1.4;
+    }
+
+    .top-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 10px 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      min-width: 90px;
+      text-align: center;
+    }
+
+    .card .label {
+      font-size: 0.75rem;
+      color: #888;
+      margin-bottom: 2px;
+    }
+
+    .card .value {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #2c2c2c;
+    }
+
+    #start-btn,
+    #play-again-btn {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 26px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
+      transition: all 0.2s;
+    }
+
+    #start-btn:hover:not(:disabled),
+    #play-again-btn:hover {
+      background: #1b5e20;
+      transform: translateY(-2px);
+    }
+
+    #start-btn:disabled {
+      background: #9e9e9e;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-width: 440px;
+      perspective: 1000px;
+    }
+
+    .memory-card {
+      width: 100%;
+      aspect-ratio: 1;
+      position: relative;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform 0.45s ease;
+    }
+
+    .memory-card.flipped {
+      transform: rotateY(180deg);
+    }
+
+    /* Thẻ đã khớp → giữ nguyên hình ảnh + hiệu ứng đẹp */
+    .memory-card.matched {
+      transform: rotateY(180deg);
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .memory-card.matched .card-back {
+      border-color: #43a047;
+      box-shadow: 0 0 0 3px #a5d6a7, 0 6px 16px rgba(67, 160, 71, 0.25);
+      transform: rotateY(180deg) scale(1.05);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+
+    .card-front {
+      background: linear-gradient(145deg, #e8f5e9, #c8e6c9);
+      border: 3px solid #81c784;
+    }
+
+    .card-back {
+      background: #fff;
+      border: 3px solid #e0d8cc;
+      transform: rotateY(180deg);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(40, 30, 20, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .overlay-content {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px 40px;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+      max-width: 90%;
+    }
+
+    .overlay-content h2 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      color: #2e7d32;
+    }
+
+    .overlay-content p {
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .overlay-content .stats {
+      font-weight: 700;
+      color: #333;
+      margin: 16px 0 24px;
+    }
+
+    .hint {
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: #888;
+      text-align: center;
+      max-width: 420px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 480px) {
+      .game-board {
+        gap: 8px;
+        max-width: 340px;
+      }
+      .card-face {
+        font-size: 1.8rem;
+      }
+      .header h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🃏 Lật Thẻ</h1>
+    <p>Tìm cặp thẻ giống nhau. Lật đúng được điểm, lật sai mất lượt.</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="card">
+      <div class="label">Điểm</div>
+      <div class="value" id="score">0</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Lượt</div>
+      <div class="value" id="moves">0</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Thời gian</div>
+      <div class="value" id="timer">00:00</div>
+    </div>
+
+    <button id="start-btn">Bắt đầu</button>
+  </div>
+
+  <div id="game-board" class="game-board"></div>
+
+  <div id="win-overlay" class="overlay">
+    <div class="overlay-content">
+      <h2>🎉 Chúc mừng!</h2>
+      <p>Bạn đã tìm hết tất cả cặp thẻ</p>
+      <p class="stats">Điểm: <span id="final-score">0</span> · Lượt: <span id="final-moves">0</span></p>
+      <button id="play-again-btn">Chơi lại</button>
+    </div>
+  </div>
+
+  <p class="hint">Nhấn vào thẻ để lật. Tìm 8 cặp giống nhau để chiến thắng!</p>
+
+  <script>
+    const board = document.getElementById('game-board');
+    const scoreEl = document.getElementById('score');
+    const movesEl = document.getElementById('moves');
+    const timerEl = document.getElementById('timer');
+    const startBtn = document.getElementById('start-btn');
+    const winOverlay = document.getElementById('win-overlay');
+    const finalScoreEl = document.getElementById('final-score');
+    const finalMovesEl = document.getElementById('final-moves');
+    const playAgainBtn = document.getElementById('play-again-btn');
+
+    const EMOJIS = ['🍎', '🍊', '🍋', '🍇', '🍓', '🍑', '🥝', '🍌'];
+
+    let cards = [];
+    let flippedCards = [];
+    let matchedCount = 0;
+    let score = 0;
+    let moves = 0;
+    let timer = 0;
+    let timerInterval = null;
+    let gameStarted = false;
+    let lockBoard = false;
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function createBoard() {
+      board.innerHTML = '';
+      const pairList = [...EMOJIS, ...EMOJIS];
+      cards = shuffle(pairList);
+
+      cards.forEach((emoji, index) => {
+        const card = document.createElement('div');
+        card.classList.add('memory-card');
+        card.dataset.emoji = emoji;
+        card.dataset.index = index;
+
+        card.innerHTML = `
+          <div class="card-face card-front">?</div>
+          <div class="card-face card-back">${emoji}</div>
+        `;
+
+        card.addEventListener('click', () => flipCard(card));
+        board.appendChild(card);
+      });
+    }
+
+    function flipCard(card) {
+      if (!gameStarted || lockBoard) return;
+      if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+      if (flippedCards.length === 2) return;
+
+      card.classList.add('flipped');
+      flippedCards.push(card);
+
+      if (flippedCards.length === 2) {
+        moves++;
+        movesEl.textContent = moves;
+        checkMatch();
+      }
+    }
+
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
+      const isMatch = card1.dataset.emoji === card2.dataset.emoji;
+
+      if (isMatch) {
+        // Giữ nguyên hình ảnh và đánh dấu đã khớp
+        card1.classList.add('matched');
+        card2.classList.add('matched');
+        matchedCount += 2;
+        score += 10;
+        scoreEl.textContent = score;
+        flippedCards = [];
+
+        if (matchedCount === cards.length) {
+          endGame();
+        }
+      } else {
+        lockBoard = true;
+        setTimeout(() => {
+          card1.classList.remove('flipped');
+          card2.classList.remove('flipped');
+          flippedCards = [];
+          lockBoard = false;
+        }, 800);
+      }
+    }
+
+    function startTimer() {
+      timer = 0;
+      timerEl.textContent = '00:00';
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timer++;
+        const min = String(Math.floor(timer / 60)).padStart(2, '0');
+        const sec = String(timer % 60).padStart(2, '0');
+        timerEl.textContent = `${min}:${sec}`;
+      }, 1000);
+    }
+
+    function startGame() {
+      gameStarted = true;
+      matchedCount = 0;
+      score = 0;
+      moves = 0;
+      flippedCards = [];
+      lockBoard = false;
+
+      scoreEl.textContent = '0';
+      movesEl.textContent = '0';
+      startBtn.disabled = true;
+      startBtn.textContent = 'Đang chơi...';
+      winOverlay.classList.remove('show');
+
+      createBoard();
+      startTimer();
+    }
+
+    function endGame() {
+      clearInterval(timerInterval);
+      gameStarted = false;
+      startBtn.disabled = false;
+      startBtn.textContent = 'Chơi lại';
+
+      finalScoreEl.textContent = score;
+      finalMovesEl.textContent = moves;
+      winOverlay.classList.add('show');
+    }
+
+    startBtn.addEventListener('click', startGame);
+    playAgainBtn.addEventListener('click', () => {
+      winOverlay.classList.remove('show');
+      startGame();
+    });
+
+    createBoard();
+  </script>
+</body>
+</html>

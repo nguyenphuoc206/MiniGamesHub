@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Sliding Puzzle</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #f5f0e6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 12px 40px;
+      color: #3d3d3d;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .header h1 {
+      font-size: 2.3rem;
+      font-weight: 800;
+      color: #2c2c2c;
+    }
+
+    .header p {
+      margin-top: 4px;
+      font-size: 0.95rem;
+      color: #7a7a7a;
+    }
+
+    .top-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 10px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: #888;
+    }
+
+    .stat-card .value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #2c2c2c;
+    }
+
+    button {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 26px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #1b5e20;
+      transform: translateY(-2px);
+    }
+
+    button.secondary {
+      background: #fff;
+      color: #3d3d3d;
+      border: 2px solid #e0d8cc;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    button.secondary:hover {
+      background: #f5f0e6;
+    }
+
+    .board-container {
+      background: #5d4037;
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.15);
+    }
+
+    .board {
+      width: 320px;
+      max-width: 90vw;
+      aspect-ratio: 1;
+      position: relative;
+    }
+
+    .tile {
+      position: absolute;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #2c2c2c;
+      background: #fff;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+      cursor: pointer;
+      transition: left 0.22s cubic-bezier(0.25, 0.8, 0.25, 1),
+                  top 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 2;
+    }
+
+    .tile.empty {
+      background: transparent;
+      box-shadow: none;
+      cursor: default;
+      z-index: 1;
+    }
+
+    .tile.correct {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .hint {
+      margin-top: 18px;
+      font-size: 0.85rem;
+      color: #888;
+      text-align: center;
+      max-width: 360px;
+      line-height: 1.4;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(40, 30, 20, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .overlay-content {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px 40px;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+      max-width: 90%;
+    }
+
+    .overlay-content h2 {
+      font-size: 2rem;
+      color: #2e7d32;
+      margin-bottom: 8px;
+    }
+
+    .overlay-content p {
+      color: #555;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🧩 Sliding Puzzle</h1>
+    <p>Xếp các ô số theo thứ tự từ 1 → 15</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="stat-card">
+      <div class="label">Số bước</div>
+      <div class="value" id="moves">0</div>
+    </div>
+    <button id="shuffle-btn">Xáo trộn</button>
+    <button class="secondary" id="solve-btn">Giải nhanh</button>
+  </div>
+
+  <div class="board-container">
+    <div class="board" id="board"></div>
+  </div>
+
+  <p class="hint">Nhấn vào ô cạnh khoảng trống để trượt. Xếp đúng thứ tự để thắng!</p>
+
+  <div class="overlay" id="overlay">
+    <div class="overlay-content">
+      <h2>🎉 Hoàn thành!</h2>
+      <p>Bạn đã xếp xong với <span id="final-moves">0</span> bước</p>
+      <button id="play-again-btn">Chơi lại</button>
+    </div>
+  </div>
+
+  <script>
+    const boardEl = document.getElementById('board');
+    const movesEl = document.getElementById('moves');
+    const shuffleBtn = document.getElementById('shuffle-btn');
+    const solveBtn = document.getElementById('solve-btn');
+    const overlay = document.getElementById('overlay');
+    const finalMovesEl = document.getElementById('final-moves');
+    const playAgainBtn = document.getElementById('play-again-btn');
+
+    const SIZE = 4;
+    const GAP = 8;
+
+    let tiles = [];           // mảng logic: giá trị 0 → 15 (15 = ô trống)
+    let emptyPos = 15;        // vị trí hiện tại của ô trống
+    let moves = 0;
+    let isAnimating = false;
+    let tileEls = {};         // map value → DOM element
+
+    function getPos(index) {
+      const row = Math.floor(index / SIZE);
+      const col = index % SIZE;
+      const boardSize = boardEl.clientWidth;
+      const tileSize = (boardSize - GAP * 3) / 4;
+      return {
+        left: col * (tileSize + GAP),
+        top: row * (tileSize + GAP),
+        size: tileSize
+      };
+    }
+
+    function createBoard() {
+      boardEl.innerHTML = '';
+      tileEls = {};
+      tiles = Array.from({ length: 16 }, (_, i) => i);
+      emptyPos = 15;
+      moves = 0;
+      movesEl.textContent = '0';
+      overlay.classList.remove('show');
+      isAnimating = false;
+
+      for (let i = 0; i < 16; i++) {
+        const el = document.createElement('div');
+        el.className = 'tile';
+        
+        if (i === 15) {
+          el.classList.add('empty');
+          el.textContent = '';
+        } else {
+          el.textContent = i + 1;
+        }
+
+        // Gắn sự kiện click theo value, không theo index
+        el.addEventListener('click', () => {
+          const currentIndex = tiles.indexOf(i);
+          handleClick(currentIndex);
+        });
+
+        const pos = getPos(i);
+        el.style.width = pos.size + 'px';
+        el.style.height = pos.size + 'px';
+        el.style.left = pos.left + 'px';
+        el.style.top = pos.top + 'px';
+
+        boardEl.appendChild(el);
+        tileEls[i] = el;
+      }
+    }
+
+    function updatePositions(animate = true) {
+      tiles.forEach((value, index) => {
+        const el = tileEls[value];
+        if (!el) return;
+
+        const pos = getPos(index);
+        el.style.left = pos.left + 'px';
+        el.style.top = pos.top + 'px';
+        el.style.width = pos.size + 'px';
+        el.style.height = pos.size + 'px';
+
+        // Đánh dấu ô đúng vị trí
+        if (value !== 15) {
+          if (value === index) el.classList.add('correct');
+          else el.classList.remove('correct');
+        }
+      });
+
+      if (animate) {
+        setTimeout(() => {
+          isAnimating = false;
+        }, 240);
+      } else {
+        isAnimating = false;
+      }
+    }
+
+    function canMove(index) {
+      const emptyRow = Math.floor(emptyPos / SIZE);
+      const emptyCol = emptyPos % SIZE;
+      const row = Math.floor(index / SIZE);
+      const col = index % SIZE;
+
+      return (
+        (row === emptyRow && Math.abs(col - emptyCol) === 1) ||
+        (col === emptyCol && Math.abs(row - emptyRow) === 1)
+      );
+    }
+
+    function handleClick(index) {
+      if (isAnimating || !canMove(index)) return;
+
+      isAnimating = true;
+
+      // Hoán đổi
+      [tiles[index], tiles[emptyPos]] = [tiles[emptyPos], tiles[index]];
+      emptyPos = index;
+      moves++;
+      movesEl.textContent = moves;
+
+      updatePositions(true);
+
+      setTimeout(() => {
+        if (isSolved()) {
+          finalMovesEl.textContent = moves;
+          overlay.classList.add('show');
+        }
+      }, 260);
+    }
+
+    function isSolved() {
+      for (let i = 0; i < 15; i++) {
+        if (tiles[i] !== i) return false;
+      }
+      return true;
+    }
+
+    function shuffle() {
+      if (isAnimating) return;
+
+      // Xáo bằng nhiều bước hợp lệ
+      for (let i = 0; i < 200; i++) {
+        const possible = [];
+        for (let j = 0; j < 16; j++) {
+          if (canMove(j)) possible.push(j);
+        }
+        const rand = possible[Math.floor(Math.random() * possible.length)];
+        [tiles[rand], tiles[emptyPos]] = [tiles[emptyPos], tiles[rand]];
+        emptyPos = rand;
+      }
+
+      moves = 0;
+      movesEl.textContent = '0';
+      overlay.classList.remove('show');
+      updatePositions(false);
+    }
+
+    function solve() {
+      if (isAnimating) return;
+      tiles = Array.from({ length: 16 }, (_, i) => i);
+      emptyPos = 15;
+      moves = 0;
+      movesEl.textContent = '0';
+      overlay.classList.remove('show');
+      updatePositions(true);
+    }
+
+    shuffleBtn.addEventListener('click', shuffle);
+    solveBtn.addEventListener('click', solve);
+    playAgainBtn.addEventListener('click', () => {
+      overlay.classList.remove('show');
+      shuffle();
+    });
+
+    window.addEventListener('resize', () => updatePositions(false));
+
+    // Khởi tạo
+    createBoard();
+    setTimeout(shuffle, 80);
+  </script>
+</body>
+</html>

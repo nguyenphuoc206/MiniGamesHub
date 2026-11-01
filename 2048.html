@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>2048</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #f5f0e6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 12px 40px;
+      color: #3d3d3d;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .header h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: #2c2c2c;
+    }
+
+    .header p {
+      margin-top: 4px;
+      font-size: 0.95rem;
+      color: #7a7a7a;
+    }
+
+    .top-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 10px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: #888;
+    }
+
+    .stat-card .value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #2c2c2c;
+    }
+
+    #new-game-btn {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 26px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
+      transition: all 0.2s;
+    }
+
+    #new-game-btn:hover {
+      background: #1b5e20;
+      transform: translateY(-2px);
+    }
+
+    .board-container {
+      background: #bbada0;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      position: relative;
+    }
+
+    .grid-bg {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      width: 320px;
+      max-width: 90vw;
+    }
+
+    .cell-bg {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #cdc1b4;
+      border-radius: 10px;
+    }
+
+    /* Layer chứa các tile thật */
+    .tiles-layer {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      pointer-events: none;
+    }
+
+    .tile {
+      position: absolute;
+      width: calc((100% - 30px) / 4);
+      height: calc((100% - 30px) / 4);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.8rem;
+      color: #776e65;
+      transition: transform 0.15s ease-in-out, top 0.15s ease-in-out, left 0.15s ease-in-out;
+      z-index: 2;
+    }
+
+    .tile.new {
+      animation: appear 0.2s ease;
+    }
+
+    .tile.merged {
+      animation: pop 0.2s ease;
+    }
+
+    @keyframes appear {
+      from { transform: scale(0); }
+      to { transform: scale(1); }
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    /* Colors */
+    .tile-2    { background: #eee4da; color: #776e65; }
+    .tile-4    { background: #ede0c8; color: #776e65; }
+    .tile-8    { background: #f2b179; color: #f9f6f2; }
+    .tile-16   { background: #f59563; color: #f9f6f2; }
+    .tile-32   { background: #f67c5f; color: #f9f6f2; }
+    .tile-64   { background: #f65e3b; color: #f9f6f2; }
+    .tile-128  { background: #edcf72; color: #f9f6f2; font-size: 1.5rem; }
+    .tile-256  { background: #edcc61; color: #f9f6f2; font-size: 1.5rem; }
+    .tile-512  { background: #edc850; color: #f9f6f2; font-size: 1.5rem; }
+    .tile-1024 { background: #edc53f; color: #f9f6f2; font-size: 1.3rem; }
+    .tile-2048 { background: #edc22e; color: #f9f6f2; font-size: 1.3rem; box-shadow: 0 0 16px #edc22e; }
+
+    .hint {
+      margin-top: 18px;
+      font-size: 0.85rem;
+      color: #888;
+      text-align: center;
+      max-width: 360px;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(40, 30, 20, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .overlay.show { display: flex; }
+
+    .overlay-content {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px 40px;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+      max-width: 90%;
+    }
+
+    .overlay-content h2 { font-size: 2rem; margin-bottom: 8px; }
+    .overlay-content.win h2 { color: #2e7d32; }
+    .overlay-content.lose h2 { color: #c62828; }
+    .overlay-content p { color: #555; margin-bottom: 20px; }
+
+    .overlay-content button {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>2048</h1>
+    <p>Vuốt hoặc dùng phím mũi tên để gộp các ô!</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="stat-card">
+      <div class="label">Điểm</div>
+      <div class="value" id="score">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Kỷ lục</div>
+      <div class="value" id="highscore">0</div>
+    </div>
+    <button id="new-game-btn">Game mới</button>
+  </div>
+
+  <div class="board-container" id="board">
+    <div class="grid-bg" id="grid-bg"></div>
+    <div class="tiles-layer" id="tiles-layer"></div>
+  </div>
+
+  <p class="hint">Vuốt trên màn hình hoặc dùng phím ← ↑ → ↓</p>
+
+  <div class="overlay" id="overlay">
+    <div class="overlay-content" id="overlay-content">
+      <h2 id="overlay-title">Game Over!</h2>
+      <p id="overlay-message">Bạn không còn nước đi nào nữa</p>
+      <button id="try-again-btn">Chơi lại</button>
+    </div>
+  </div>
+
+  <script>
+    const tilesLayer = document.getElementById('tiles-layer');
+    const gridBg = document.getElementById('grid-bg');
+    const scoreEl = document.getElementById('score');
+    const highscoreEl = document.getElementById('highscore');
+    const newGameBtn = document.getElementById('new-game-btn');
+    const overlay = document.getElementById('overlay');
+    const overlayContent = document.getElementById('overlay-content');
+    const overlayTitle = document.getElementById('overlay-title');
+    const overlayMessage = document.getElementById('overlay-message');
+    const tryAgainBtn = document.getElementById('try-again-btn');
+
+    let board = [];
+    let tiles = [];          // {id, value, row, col, merged}
+    let score = 0;
+    let highscore = 0;
+    let gameOver = false;
+    let won = false;
+    let lock = false;
+    let nextId = 1;
+
+    // Tạo nền 4x4
+    for (let i = 0; i < 16; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell-bg';
+      gridBg.appendChild(cell);
+    }
+
+    function getHigh() {
+      try { return parseInt(localStorage.getItem('high2048') || '0'); } catch { return 0; }
+    }
+    function setHigh(v) {
+      try { localStorage.setItem('high2048', v); } catch {}
+    }
+
+    highscore = getHigh();
+    highscoreEl.textContent = highscore;
+
+    function getPosition(row, col) {
+      const gap = 10;
+      const size = (tilesLayer.clientWidth - gap * 3) / 4;
+      return {
+        left: col * (size + gap),
+        top: row * (size + gap),
+        size
+      };
+    }
+
+    function createTile(value, row, col, isNew = false) {
+      const id = nextId++;
+      const tile = { id, value, row, col, merged: false };
+      tiles.push(tile);
+
+      const el = document.createElement('div');
+      el.className = `tile tile-${value > 2048 ? 2048 : value}${isNew ? ' new' : ''}`;
+      el.id = `tile-${id}`;
+      el.textContent = value;
+
+      const pos = getPosition(row, col);
+      el.style.width = pos.size + 'px';
+      el.style.height = pos.size + 'px';
+      el.style.left = pos.left + 'px';
+      el.style.top = pos.top + 'px';
+
+      tilesLayer.appendChild(el);
+      return tile;
+    }
+
+    function updateTilePosition(tile) {
+      const el = document.getElementById(`tile-${tile.id}`);
+      if (!el) return;
+      const pos = getPosition(tile.row, tile.col);
+      el.style.left = pos.left + 'px';
+      el.style.top = pos.top + 'px';
+      el.style.width = pos.size + 'px';
+      el.style.height = pos.size + 'px';
+    }
+
+    function removeTile(tile) {
+      const el = document.getElementById(`tile-${tile.id}`);
+      if (el) el.remove();
+      tiles = tiles.filter(t => t.id !== tile.id);
+    }
+
+    function renderTiles() {
+      // Cập nhật vị trí tất cả tile hiện có
+      tiles.forEach(tile => {
+        const el = document.getElementById(`tile-${tile.id}`);
+        if (el) {
+          el.className = `tile tile-${tile.value > 2048 ? 2048 : tile.value}${tile.merged ? ' merged' : ''}`;
+          el.textContent = tile.value;
+          updateTilePosition(tile);
+          if (tile.merged) {
+            setTimeout(() => tile.merged = false, 200);
+          }
+        }
+      });
+    }
+
+    function addRandomTile() {
+      const empty = [];
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          if (!tiles.some(t => t.row === r && t.col === c)) {
+            empty.push({ r, c });
+          }
+        }
+      }
+      if (empty.length === 0) return;
+      const { r, c } = empty[Math.floor(Math.random() * empty.length)];
+      const value = Math.random() < 0.9 ? 2 : 4;
+      createTile(value, r, c, true);
+    }
+
+    function createBoard() {
+      // Xóa hết tile cũ
+      tiles.forEach(t => {
+        const el = document.getElementById(`tile-${t.id}`);
+        if (el) el.remove();
+      });
+      tiles = [];
+      nextId = 1;
+      score = 0;
+      gameOver = false;
+      won = false;
+      lock = false;
+      updateScore();
+      overlay.classList.remove('show');
+
+      addRandomTile();
+      addRandomTile();
+    }
+
+    function updateScore() {
+      scoreEl.textContent = score;
+      if (score > highscore) {
+        highscore = score;
+        highscoreEl.textContent = highscore;
+        setHigh(highscore);
+      }
+    }
+
+    function getTileAt(row, col) {
+      return tiles.find(t => t.row === row && t.col === col);
+    }
+
+    function move(direction) {
+      if (lock || gameOver) return;
+      lock = true;
+
+      let moved = false;
+      const vectors = {
+        left:  { dr: 0, dc: -1 },
+        right: { dr: 0, dc: 1 },
+        up:    { dr: -1, dc: 0 },
+        down:  { dr: 1, dc: 0 }
+      };
+      const vec = vectors[direction];
+
+      // Sắp xếp thứ tự duyệt
+      const positions = [];
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          positions.push({ r, c });
+        }
+      }
+
+      if (direction === 'right') positions.sort((a, b) => b.c - a.c);
+      if (direction === 'left')  positions.sort((a, b) => a.c - b.c);
+      if (direction === 'down')  positions.sort((a, b) => b.r - a.r);
+      if (direction === 'up')    positions.sort((a, b) => a.r - b.r);
+
+      const mergedIds = new Set();
+
+      positions.forEach(pos => {
+        const tile = getTileAt(pos.r, pos.c);
+        if (!tile) return;
+
+        let newR = tile.row;
+        let newC = tile.col;
+
+        while (true) {
+          const nextR = newR + vec.dr;
+          const nextC = newC + vec.dc;
+
+          if (nextR < 0 || nextR > 3 || nextC < 0 || nextC > 3) break;
+
+          const target = getTileAt(nextR, nextC);
+          if (!target) {
+            newR = nextR;
+            newC = nextC;
+            moved = true;
+          } else if (target.value === tile.value && !mergedIds.has(target.id) && !mergedIds.has(tile.id)) {
+            // Merge
+            newR = nextR;
+            newC = nextC;
+            moved = true;
+            break;
+          } else {
+            break;
+          }
+        }
+
+        if (newR !== tile.row || newC !== tile.col) {
+          const target = getTileAt(newR, newC);
+          if (target && target.value === tile.value) {
+            // Thực hiện merge
+            target.value *= 2;
+            target.merged = true;
+            score += target.value;
+            mergedIds.add(target.id);
+            removeTile(tile);
+
+            if (target.value === 2048 && !won) {
+              won = true;
+              setTimeout(() => showOverlay(true), 250);
+            }
+          } else {
+            tile.row = newR;
+            tile.col = newC;
+          }
+        }
+      });
+
+      renderTiles();
+      updateScore();
+
+      setTimeout(() => {
+        if (moved) {
+          addRandomTile();
+          if (isGameOver()) {
+            gameOver = true;
+            showOverlay(false);
+          }
+        }
+        lock = false;
+      }, 160);
+    }
+
+    function isGameOver() {
+      if (tiles.length < 16) return false;
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const t = getTileAt(r, c);
+          if (!t) return false;
+          if (c < 3) {
+            const right = getTileAt(r, c + 1);
+            if (right && right.value === t.value) return false;
+          }
+          if (r < 3) {
+            const down = getTileAt(r + 1, c);
+            if (down && down.value === t.value) return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function showOverlay(isWin) {
+      overlayContent.className = 'overlay-content ' + (isWin ? 'win' : 'lose');
+      overlayTitle.textContent = isWin ? 'Bạn đã thắng!' : 'Game Over!';
+      overlayMessage.textContent = isWin 
+        ? 'Chúc mừng! Bạn đã đạt 2048' 
+        : 'Không còn nước đi nào nữa';
+      overlay.classList.add('show');
+    }
+
+    // Keyboard
+    document.addEventListener('keydown', e => {
+      const map = {
+        ArrowLeft: 'left', ArrowRight: 'right',
+        ArrowUp: 'up', ArrowDown: 'down'
+      };
+      if (map[e.key]) {
+        e.preventDefault();
+        move(map[e.key]);
+      }
+    });
+
+    // Touch
+    let startX, startY;
+    document.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      if (!startX) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        move(dx > 0 ? 'right' : 'left');
+      } else {
+        move(dy > 0 ? 'down' : 'up');
+      }
+      startX = startY = null;
+    }, { passive: true });
+
+    newGameBtn.addEventListener('click', createBoard);
+    tryAgainBtn.addEventListener('click', createBoard);
+
+    // Khởi tạo
+    window.addEventListener('resize', () => renderTiles());
+    createBoard();
+  </script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Games Hub</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #f5f0e6;
+      color: #3d3d3d;
+      min-height: 100vh;
+      padding: 24px 16px 60px;
+    }
+    /* Header */
+    .hub-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .hub-header h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #2c2c2c;
+      margin-bottom: 8px;
+    }
+    .hub-header p {
+      font-size: 1.05rem;
+      color: #7a7a7a;
+    }
+    /* Grid of games */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .game-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 24px 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      border: 3px solid transparent;
+    }
+    .game-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 32px rgba(0,0,0,0.12);
+      border-color: #a5d6a7;
+    }
+    .game-icon {
+      font-size: 3.2rem;
+      margin-bottom: 12px;
+    }
+    .game-card h3 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: #2c2c2c;
+    }
+    .game-card p {
+      font-size: 0.9rem;
+      color: #7a7a7a;
+      line-height: 1.4;
+      margin-bottom: 18px;
+      flex-grow: 1;
+    }
+    .play-btn {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 10px 28px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(46,125,50,0.3);
+      transition: all 0.2s;
+    }
+    .play-btn:hover {
+      background: #1b5e20;
+      transform: scale(1.05);
+    }
+    /* Game view */
+    #game-view {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #f5f0e6;
+      z-index: 100;
+      overflow: auto;
+      flex-direction: column;
+    }
+    #game-view.show {
+      display: flex;
+    }
+    .game-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: #fff;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .game-topbar h2 {
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+    .back-btn {
+      background: #fff;
+      border: 2px solid #e0d8cc;
+      border-radius: 50px;
+      padding: 8px 20px;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      color: #3d3d3d;
+    }
+    .back-btn:hover {
+      background: #f5f0e6;
+    }
+    #game-frame {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: #f5f0e6;
+    }
+    /* Footer */
+    .hub-footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.85rem;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <!-- ===== MENU CHÍNH ===== -->
+  <div id="hub">
+    <div class="hub-header">
+      <h1>🎮 Mini Games Hub</h1>
+      <p>Tổng hợp các minigame vui nhộn</p>
+    </div>
+
+    <div class="games-grid">
+      <!-- Hứng Táo -->
+      <div class="game-card" data-game="hungtao">
+        <div class="game-icon">🍎</div>
+        <h3>Hứng Táo</h3>
+        <p>Hứng táo rơi bằng giỏ. Càng hứng được nhiều điểm càng cao!</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+
+      <!-- Memory Number (Chuỗi số) -->
+      <div class="game-card" data-game="memorynumber">
+        <div class="game-icon">🔢</div>
+        <h3>Memory Number</h3>
+        <p>Nhớ chuỗi số sáng lên rồi nhấn lại đúng thứ tự. Càng cao càng khó!</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+
+      <!-- Sunny Clicker -->
+      <div class="game-card" data-game="clicker">
+        <div class="game-icon">☀️</div>
+        <h3>Sunny Clicker</h3>
+        <p>Click để kiếm điểm, nâng cấp tay và máy thu hoạch. Idle game vui vẻ!</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+
+      <!-- Lật Thẻ -->
+      <div class="game-card" data-game="memory">
+        <div class="game-icon">🃏</div>
+        <h3>Lật Thẻ</h3>
+        <p>Tìm các cặp thẻ giống nhau. Luyện trí nhớ cực vui!</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+
+      <!-- Tic Tac Toe -->
+      <div class="game-card" data-game="tictactoe">
+        <div class="game-icon">⭕</div>
+        <h3>Tic Tac Toe</h3>
+        <p>Cờ caro 3×3 cổ điển. Chơi 2 người hoặc đấu với máy.</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+
+      <!-- Whack-a-Mole -->
+      <div class="game-card" data-game="whack">
+        <div class="game-icon">🐹</div>
+        <h3>Whack-a-Mole</h3>
+        <p>Đập chuột thần tốc trong 30 giây. Phản xạ càng nhanh càng tốt!</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+
+      <!-- Snake -->
+      <div class="game-card" data-game="snake">
+        <div class="game-icon">🐍</div>
+        <h3>Rắn Săn Mồi</h3>
+        <p>Điều khiển rắn ăn thức ăn, đừng đụng tường hay thân mình.</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+
+      <!-- Flappy Bird -->
+      <div class="game-card" data-game="flappy">
+        <div class="game-icon">🐤</div>
+        <h3>Flappy Bird</h3>
+        <p>Bay lên tránh ống nước. Một chạm là bay!</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+
+      <!-- 2048 -->
+      <div class="game-card" data-game="2048">
+        <div class="game-icon">🔢</div>
+        <h3>2048</h3>
+        <p>Gộp các ô số để đạt 2048. Càng cao càng đã!</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+
+      <!-- Sliding Puzzle -->
+      <div class="game-card" data-game="sliding">
+        <div class="game-icon">🧩</div>
+        <h3>Sliding Puzzle</h3>
+        <p>Xếp hình 15 ô. Trượt các ô về đúng vị trí.</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+
+      <!-- Dog / Dino Run -->
+      <div class="game-card" data-game="dino">
+        <div class="game-icon">🦖</div>
+        <h3>Dino Run</h3>
+        <p>Khủng long chạy và nhảy qua xương rồng + bãi gai.</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+
+      <!-- Minesweeper -->
+      <div class="game-card" data-game="minesweeper">
+        <div class="game-icon">💣</div>
+        <h3>Minesweeper</h3>
+        <p>Dò mìn cổ điển với nhiều độ khó + chế độ Custom.</p>
+        <button class="play-btn">Chơi ngay</button>
+      </div>
+    </div>
+
+    <div class="hub-footer">
+      Mini Games Hub • Giao diện tươi sáng • Chơi vui!
+    </div>
+  </div>
+
+  <!-- ===== KHUNG CHƠI GAME ===== -->
+  <div id="game-view">
+    <div class="game-topbar">
+      <button class="back-btn" id="back-btn">← Quay lại</button>
+      <h2 id="game-title">Game</h2>
+      <div style="width:100px"></div>
+    </div>
+    <iframe id="game-frame" src="about:blank"></iframe>
+  </div>
+
+  <script>
+    // Danh sách file game (đặt cùng thư mục với file này)
+    const games = {
+      hungtao:       { title: '🍎 Hứng Táo',         file: 'hungtao.html' },
+      memorynumber:  { title: '🔢 Memory Number',    file: 'memory-number.html' },
+      clicker:       { title: '☀️ Sunny Clicker',    file: 'clicker-game.html' },
+      memory:        { title: '🃏 Lật Thẻ',           file: 'memory-card.html' },
+      tictactoe:     { title: '⭕ Tic Tac Toe',       file: 'tic-tac-toe.html' },
+      whack:         { title: '🐹 Whack-a-Mole',      file: 'whack-a-mole.html' },
+      snake:         { title: '🐍 Rắn Săn Mồi',       file: 'snake.html' },
+      flappy:        { title: '🐤 Flappy Bird',       file: 'flappy-bird.html' },
+      '2048':        { title: '🔢 2048',              file: '2048.html' },
+      sliding:       { title: '🧩 Sliding Puzzle',    file: 'sliding-puzzle.html' },
+      dino:          { title: '🦖 Dino Run',          file: 'dog-run.html' },
+      minesweeper:   { title: '💣 Minesweeper',       file: 'minesweeper.html' }
+    };
+
+    const hub = document.getElementById('hub');
+    const gameView = document.getElementById('game-view');
+    const gameFrame = document.getElementById('game-frame');
+    const gameTitle = document.getElementById('game-title');
+    const backBtn = document.getElementById('back-btn');
+
+    // Click vào card hoặc nút Chơi
+    document.querySelectorAll('.game-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const key = card.dataset.game;
+        const game = games[key];
+        if (!game) return;
+        gameTitle.textContent = game.title;
+        gameFrame.src = game.file;
+        hub.style.display = 'none';
+        gameView.classList.add('show');
+      });
+    });
+
+    // Quay lại menu
+    backBtn.addEventListener('click', () => {
+      gameFrame.src = 'about:blank';
+      gameView.classList.remove('show');
+      hub.style.display = 'block';
+    });
+  </script>
+</body>
+</html>

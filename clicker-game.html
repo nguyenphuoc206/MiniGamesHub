@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sunny Clicker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap');
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #fff8e7 0%, #ffe4f3 50%, #e0f7fa 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    color: #2d3436;
+  }
+  h1 {
+    font-size: 2.4rem;
+    color: #e17055;
+    text-shadow: 2px 2px 0 #fff;
+    margin-bottom: 8px;
+  }
+  .score-box {
+    background: white;
+    border-radius: 24px;
+    padding: 16px 32px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .score {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: #00b894;
+  }
+  .per-sec {
+    font-size: 1rem;
+    color: #636e72;
+  }
+  .click-area {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #fdcb6e, #e17055);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 12px 30px rgba(225, 112, 85, 0.4);
+    transition: transform 0.1s;
+    margin-bottom: 30px;
+  }
+  .click-area:active {
+    transform: scale(0.92);
+  }
+  .upgrades {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    width: 100%;
+    max-width: 720px;
+  }
+  .upgrade {
+    background: white;
+    border-radius: 18px;
+    padding: 14px 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 2px solid transparent;
+  }
+  .upgrade:hover:not(.disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.1);
+    border-color: #00b894;
+  }
+  .upgrade.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .upgrade-info h3 {
+    font-size: 1.05rem;
+    color: #2d3436;
+  }
+  .upgrade-info p {
+    font-size: 0.82rem;
+    color: #636e72;
+  }
+  .price {
+    background: #00b894;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+  .upgrade.disabled .price {
+    background: #b2bec3;
+  }
+</style>
+</head>
+<body>
+  <h1>☀️ Sunny Clicker</h1>
+  
+  <div class="score-box">
+    <div class="score" id="score">0</div>
+    <div class="per-sec" id="perSec">+0 / giây</div>
+  </div>
+  
+  <div class="click-area" id="clickBtn">🍎</div>
+  
+  <div class="upgrades" id="upgrades"></div>
+
+<script>
+  let score = 0;
+  let perClick = 1;
+  let perSecond = 0;
+  
+  const upgrades = [
+    { name: "Tay nhanh hơn", desc: "+1 mỗi lần click", base: 15, power: 1, type: "click", owned: 0 },
+    { name: "Bạn bè giúp", desc: "+1 điểm / giây", base: 50, power: 1, type: "auto", owned: 0 },
+    { name: "Máy thu hoạch", desc: "+5 điểm / giây", base: 200, power: 5, type: "auto", owned: 0 },
+    { name: "Vườn táo lớn", desc: "+20 điểm / giây", base: 800, power: 20, type: "auto", owned: 0 },
+    { name: "Siêu click", desc: "+10 mỗi lần click", base: 500, power: 10, type: "click", owned: 0 },
+  ];
+  
+  const scoreEl = document.getElementById("score");
+  const perSecEl = document.getElementById("perSec");
+  const upgradesEl = document.getElementById("upgrades");
+  
+  function format(n) {
+    return Math.floor(n).toLocaleString("vi-VN");
+  }
+  
+  function updateUI() {
+    scoreEl.textContent = format(score);
+    perSecEl.textContent = `+${format(perSecond)} / giây`;
+    
+    upgradesEl.innerHTML = "";
+    upgrades.forEach((u, i) => {
+      const cost = Math.floor(u.base * Math.pow(1.15, u.owned));
+      const canBuy = score >= cost;
+      
+      const div = document.createElement("div");
+      div.className = "upgrade" + (canBuy ? "" : " disabled");
+      
+      div.innerHTML = `
+        <div class="upgrade-info">
+          <h3>${u.name} <span style="color:#00b894">(${u.owned})</span></h3>
+          <p>${u.desc}</p>
+        </div>
+        <div class="price">${format(cost)}</div>
+      `;
+      
+      // Quan trọng: gắn sự kiện đúng cách
+      div.addEventListener("click", (e) => {
+        e.stopPropagation();
+        buy(i);
+      });
+      
+      upgradesEl.appendChild(div);
+    });
+  }
+  
+  function buy(i) {
+    const u = upgrades[i];
+    const cost = Math.floor(u.base * Math.pow(1.15, u.owned));
+    
+    if (score >= cost) {
+      score -= cost;
+      u.owned++;
+      
+      if (u.type === "click") {
+        perClick += u.power;
+      } else {
+        perSecond += u.power;
+      }
+      updateUI();
+    }
+  }
+  
+  // Click chính
+  document.getElementById("clickBtn").addEventListener("click", () => {
+    score += perClick;
+    updateUI();
+  });
+  
+  // Tự động cộng điểm
+  setInterval(() => {
+    if (perSecond > 0) {
+      score += perSecond / 10;
+      updateUI();
+    }
+  }, 100);
+  
+  updateUI();
+</script>
+</body>
+</html>
